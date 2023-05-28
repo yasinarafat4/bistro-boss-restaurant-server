@@ -9,8 +9,8 @@ app.use(cors());
 app.use(express.json());
 
 const { MongoClient, ServerApiVersion } = require("mongodb");
-// const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.qx5eerd.mongodb.net/?retryWrites=true&w=majority`;
-const uri = `mongodb://${process.env.DB_USER}:${process.env.DB_PASS}@ac-tguiqde-shard-00-00.qx5eerd.mongodb.net:27017,ac-tguiqde-shard-00-01.qx5eerd.mongodb.net:27017,ac-tguiqde-shard-00-02.qx5eerd.mongodb.net:27017/?ssl=true&replicaSet=atlas-6rcg7x-shard-0&authSource=admin&retryWrites=true&w=majority`;
+const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.qx5eerd.mongodb.net/?retryWrites=true&w=majority`;
+// const uri = `mongodb://${process.env.DB_USER}:${process.env.DB_PASS}@ac-tguiqde-shard-00-00.qx5eerd.mongodb.net:27017,ac-tguiqde-shard-00-01.qx5eerd.mongodb.net:27017,ac-tguiqde-shard-00-02.qx5eerd.mongodb.net:27017/?ssl=true&replicaSet=atlas-6rcg7x-shard-0&authSource=admin&retryWrites=true&w=majority`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
@@ -29,6 +29,7 @@ async function run() {
     // DB collections
     const menuCollection = client.db("bistroBossDB").collection("menu");
     const reviewsCollection = client.db("bistroBossDB").collection("reviews");
+    const cartCollection = client.db("bistroBossDB").collection("carts");
 
     // GET method for Menu
     app.get("/menu", async (req, res) => {
@@ -41,6 +42,16 @@ async function run() {
       const result = await reviewsCollection.find().toArray();
       res.send(result);
     });
+
+    // Cart collection Insert document
+    app.post("/carts", async (req, res) => {
+      const item = req.body;
+      const result = await cartCollection.insertOne(item);
+      res.send(result);
+    });
+    // app.post("/carts", async (req, res) => {
+    //   res.send(await cartCollection.insertOne(req.body));
+    // });
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
@@ -61,3 +72,19 @@ app.get("/", (req, res) => {
 app.listen(port, () => {
   console.log(`Bistro Boss is Running on Port ${port}`);
 });
+
+/*
+--------------------
+  Naming Convention
+--------------------
+
+users: usersCollection
+
+app.get('/users')
+app.get('/users/:id')
+app.post('/users')
+app.patch('/users/:id')
+app.put('/users/:id')
+app.delete('/users/:id')
+
+*/
