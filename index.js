@@ -34,6 +34,11 @@ async function run() {
 
     // Users related API's
 
+    app.get("/users", async (req, res) => {
+      const result = await usersCollection.find().toArray();
+      res.send(result);
+    });
+
     // create(POST)
     app.post("/users", async (req, res) => {
       const user = req.body;
@@ -44,6 +49,19 @@ async function run() {
         return res.send({ message: "User already exist" });
       }
       const result = await usersCollection.insertOne(user);
+      res.send(result);
+    });
+
+    // To make admin (PATCH)
+    app.patch("/users/admin/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const updateDoc = {
+        $set: {
+          role: "admin",
+        },
+      };
+      const result = await usersCollection.updateOne(filter, updateDoc);
       res.send(result);
     });
 
