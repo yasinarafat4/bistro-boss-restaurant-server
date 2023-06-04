@@ -56,6 +56,7 @@ async function run() {
     const menuCollection = client.db("bistroBossDB").collection("menu");
     const reviewsCollection = client.db("bistroBossDB").collection("reviews");
     const cartCollection = client.db("bistroBossDB").collection("carts");
+    const paymentCollection = client.db("bistroBossDB").collection("payments"); // to store payments
 
     // JWT related API's
     app.post("/jwt", (req, res) => {
@@ -193,6 +194,8 @@ async function run() {
       res.send(result);
     });
 
+    // Payment related API's
+
     // create payment intent
     app.post("/create-payment-intent", verifyJWT, async (req, res) => {
       const { price } = req.body;
@@ -205,6 +208,20 @@ async function run() {
       res.send({
         clientSecret: paymentIntent.client_secret,
       });
+    });
+
+    // Storing payments
+    app.post("/payments", verifyJWT, async (req, res) => {
+      const payment = req.body;
+      const insertResult = await paymentCollection.insertOne(payment);
+
+      // Delete query
+      const query = {
+        _id: { $in: payment.cartItems.map((id) => new ObjectId(id)) },
+      };
+      const deleteResult = await cartCollection.deleteMany(query);
+
+      res.send({ insertResult, deleteResult });
     });
 
     // Send a ping to confirm a successful connection
