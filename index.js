@@ -3,6 +3,7 @@ const app = express();
 const jwt = require("jsonwebtoken");
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 require("dotenv").config();
+const nodemailer = require("nodemailer");
 const cors = require("cors");
 const stripe = require("stripe")(process.env.PAYMENT_SECRET_KEY);
 const port = process.env.PORT || 5000;
@@ -221,8 +222,40 @@ async function run() {
       };
       const deleteResult = await cartCollection.deleteMany(query);
 
+      // send an email to confirm payment
+      sendPaymentConfirmationEmail(payment);
+
       res.send({ insertResult, deleteResult });
     });
+
+    // send payment confirmation email
+    let transporter = nodemailer.createTransport({
+      host: "smtp.sendgrid.net",
+      port: 587,
+      auth: {
+        user: "apikey",
+        pass: process.env.SENDGRID_API_KEY,
+      },
+    });
+
+    const sendPaymentConfirmationEmail = (payment) => {
+      transporter.sendMail(
+        {
+          from: "bistroboss@gmail.com",
+          to: payment.email,
+          subject: "Your order is confirmed. Enjoy the food!",
+          text: "Hello world!",
+          html: "<b>Hello world!</b>",
+        },
+        function (error, info) {
+          if (error) {
+            console.log(error);
+          } else {
+            console.log("Email sent: " + info.response);
+          }
+        }
+      );
+    };
 
     // Admin dashboard stats related API's
     app.get("/admin-stats", verifyJWT, verifyAdmin, async (req, res) => {
