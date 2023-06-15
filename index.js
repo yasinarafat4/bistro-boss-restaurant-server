@@ -4,6 +4,7 @@ const jwt = require("jsonwebtoken");
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 require("dotenv").config();
 const nodemailer = require("nodemailer");
+const mg = require("nodemailer-mailgun-transport");
 const cors = require("cors");
 const stripe = require("stripe")(process.env.PAYMENT_SECRET_KEY);
 const port = process.env.PORT || 5000;
@@ -229,23 +230,35 @@ async function run() {
     });
 
     // send payment confirmation email
-    let transporter = nodemailer.createTransport({
-      host: "smtp.sendgrid.net",
-      port: 587,
+    // let transporter = nodemailer.createTransport({
+    //   host: "smtp.sendgrid.net",
+    //   port: 587,
+    //   auth: {
+    //     user: "apikey",
+    //     pass: process.env.SENDGRID_API_KEY,
+    //   },
+    // });
+
+    const auth = {
       auth: {
-        user: "apikey",
-        pass: process.env.SENDGRID_API_KEY,
+        api_key: process.env.EMAIL_PRIVATE_KEY,
+        domain: process.env.EMAIL_DOMAIN,
       },
-    });
+    };
+
+    const transporter = nodemailer.createTransport(mg(auth));
 
     const sendPaymentConfirmationEmail = (payment) => {
       transporter.sendMail(
         {
-          from: "bistroboss@gmail.com",
-          to: payment.email,
+          from: "mdyasinarafathasib@gmail.com",
+          to: "mdyasinarafathasib@gmail.com",
           subject: "Your order is confirmed. Enjoy the food!",
           text: "Hello world!",
-          html: "<b>Hello world!</b>",
+          html: `<div>
+          <h2>Payment Confirmed!</h2>
+            <p>Transaction Id: ${payment.transactionId}</p>
+          </div>`,
         },
         function (error, info) {
           if (error) {
